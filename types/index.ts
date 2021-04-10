@@ -5,6 +5,7 @@ export interface Accounts {
   alice: string;
   bob: string;
   dave: string;
+  proxy: string;
 }
 
 export interface Signers {
@@ -12,4 +13,13 @@ export interface Signers {
   alice: Signer;
   bob: Signer;
   dave: Signer;
+  proxy: Signer;
+  list: Signer[];
+}
+
+export interface DeployedContracts {
+  PxlGen: string;
+  PxlGenFactory: string;
+  Proxy: string;
+  Multicall: string;
 }

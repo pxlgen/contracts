@@ -7,6 +7,8 @@ import { NetworkUserConfig } from "hardhat/types";
 import "./tasks/accounts";
 import "./tasks/clean";
 import "./tasks/generate";
+import "./tasks/deploy-pxlgen";
+import "./tasks/mint";
 
 import "@nomiclabs/hardhat-waffle";
 import "hardhat-typechain";
@@ -83,10 +85,12 @@ const config: HardhatUserConfig = {
     outDir: "typechain",
     target: "ethers-v5",
   },
-  gasReporter: {
-    currency: "USD",
-    gasPrice: 100,
-  },
 };
 
 export default config;
+
+// ,
+//   gasReporter: {
+//     currency: "USD",
+//     gasPrice: 100,
+//   },

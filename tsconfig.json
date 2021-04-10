@@ -18,9 +18,12 @@
     "artifacts/**/*.json",
     "scripts/**/*",
     "tasks/**/*",
+    "metadata/**/*",
     "test/**/*",
     "typechain/**/*",
     "types/**/*",
-    "hardhat.config.ts"
+    "hardhat.config.ts",
+    "deployment/**/*",
+    "ignition.config.ts"
   ]
 }

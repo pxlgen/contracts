@@ -1,6 +1,6 @@
 {
-  "name": "@muralis/hardhat",
-  "description": "Muralis Contracts",
+  "name": "@pxlgen/hardhat",
+  "description": "PxlGen Contracts",
   "version": "1.0.0",
   "author": "Dylan Kilkenny",
   "devDependencies": {
@@ -10,6 +10,7 @@
     "@ethersproject/bignumber": "^5.0.8",
     "@nomiclabs/hardhat-ethers": "^2.0.0",
     "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "@tenderly/ignition": "^0.1.0",
     "@typechain/ethers-v5": "^5.0.0",
     "@types/chai": "^4.2.13",
     "@types/fs-extra": "^9.0.1",
@@ -39,7 +40,7 @@
     "solhint-plugin-prettier": "^0.0.5",
     "solidity-coverage": "^0.7.12",
     "ts-generator": "^0.1.1",
-    "ts-node": "^8.10.2",
+    "ts-node": "^9.1.1",
     "typechain": "^4.0.1",
     "typescript": "^3.9.7"
   },
@@ -75,6 +76,11 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.0.0-beta.0",
+    "@openzeppelin/test-helpers": "^0.5.10",
+    "@types/bip39": "^3.0.0",
+    "axios": "^0.21.1",
+    "bip39": "^3.0.3",
+    "ethereumjs-wallet": "^1.0.1",
     "qrcode-terminal": "^0.12.0"
   }
 }
