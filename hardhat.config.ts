@@ -16,13 +16,10 @@ import "solidity-coverage";
 import "hardhat-gas-reporter";
 
 const chainIds = {
-  ganache: 1337,
-  goerli: 5,
-  hardhat: 31337,
-  kovan: 42,
   mainnet: 1,
   rinkeby: 4,
-  ropsten: 3,
+  ganache: 1337,
+  hardhat: 31337,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -33,15 +30,27 @@ if (!process.env.MNEMONIC) {
   mnemonic = process.env.MNEMONIC;
 }
 
-let infuraApiKey: string;
-if (!process.env.INFURA_API_KEY) {
-  throw new Error("Please set your INFURA_API_KEY in a .env file");
+let ALCHEMY_RINKEBY_API_KEY: string;
+if (!process.env.ALCHEMY_RINKEBY_API_KEY) {
+  throw new Error("Please set your ALCHEMY_RINKEBY_API_KEY in a .env file");
 } else {
-  infuraApiKey = process.env.INFURA_API_KEY;
+  ALCHEMY_RINKEBY_API_KEY = process.env.ALCHEMY_RINKEBY_API_KEY;
 }
 
-function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
-  const url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
+let ALCHEMY_MAINNET_API_KEY: string;
+if (!process.env.ALCHEMY_MAINNET_API_KEY) {
+  throw new Error("Please set your ALCHEMY_MAINNET_API_KEY in a .env file");
+} else {
+  ALCHEMY_MAINNET_API_KEY = process.env.ALCHEMY_MAINNET_API_KEY;
+}
+
+function createNetworkConfig(network: keyof typeof chainIds): NetworkUserConfig {
+  let url: string;
+  if (network == "mainnet") {
+    url = ALCHEMY_MAINNET_API_KEY;
+  } else {
+    url = ALCHEMY_RINKEBY_API_KEY;
+  }
   return {
     accounts: {
       count: 10,
@@ -60,10 +69,8 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: chainIds.hardhat,
     },
-    goerli: createTestnetConfig("goerli"),
-    kovan: createTestnetConfig("kovan"),
-    rinkeby: createTestnetConfig("rinkeby"),
-    ropsten: createTestnetConfig("ropsten"),
+    rinkeby: createNetworkConfig("rinkeby"),
+    mainnet: createNetworkConfig("mainnet"),
   },
   paths: {
     artifacts: "./artifacts",
