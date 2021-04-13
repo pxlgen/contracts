@@ -16,10 +16,10 @@ use(solidity);
 const BN_ZERO = ethers.BigNumber.from(0);
 const BN_ONE = ethers.BigNumber.from(1);
 const ZERO_ADDR = ethers.constants.AddressZero;
-const defaultURI = "QmbJbiKnRhfZmTQU6Uh8jHPfVGJ2Uvj4Gu6QiwKJShcnGP";
 
 describe("PxlGenFactory Unit tests", function () {
-  const baseURI = "https://pxlgen.xyz/api/token/";
+  const baseURI = "https://gateway.pinata.cloud/ipfs/";
+  const defaultURI = "QmbJbiKnRhfZmTQU6Uh8jHPfVGJ2Uvj4Gu6QiwKJShcnGP";
   before(async function () {
     this.accounts = {} as Accounts;
     this.signers = {} as Signers;
@@ -53,7 +53,7 @@ describe("PxlGenFactory Unit tests", function () {
     this.PxlGenFactory = (await deployContract(this.signers.admin, PxlGenFactoryArtifact, [
       this.Proxy.address,
       this.PxlGen.address,
-      baseURI,
+      baseURI + defaultURI,
     ])) as PxlGenFactory;
 
     await this.PxlGen.transferOwnership(this.PxlGenFactory.address);
@@ -68,7 +68,7 @@ describe("PxlGenFactory Unit tests", function () {
       expect(await this.PxlGenFactory.pxlGen()).to.eq(this.PxlGen.address);
     });
     it("should set baseMetadataURI to the supplied value", async function () {
-      expect(await this.PxlGenFactory.baseMetadataURI()).to.eq(baseURI);
+      expect(await this.PxlGenFactory.baseMetadataURI()).to.eq(baseURI + defaultURI);
     });
     it("should return the correct name", async function () {
       expect(await this.PxlGenFactory.name()).to.eq("PxlGen Pre-Sale");
@@ -102,9 +102,9 @@ describe("PxlGenFactory Unit tests", function () {
       const tokenIndex: number = 1;
       const to = this.accounts.alice;
       const tx = this.PxlGenFactory.mint(tokenIndex, to, 1, "0x00");
-      const tokenId: BigNumber = (await this.PxlGen.CELL_TOKEN_TYPE()).add(tokenIndex);
+      const tokenId: BigNumber = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(tokenIndex);
 
-      await expect(tx).to.emit(this.PxlGen, "CellMinted").withArgs(to, tokenId, tokenIndex, defaultURI);
+      await expect(tx).to.emit(this.PxlGen, "PlotMinted").withArgs(to, tokenId, tokenIndex, defaultURI);
       await expect(tx)
         .to.emit(this.PxlGen, "TransferSingle")
         .withArgs(this.PxlGenFactory.address, ethers.constants.AddressZero, to, tokenId, BN_ONE);
@@ -115,9 +115,9 @@ describe("PxlGenFactory Unit tests", function () {
       const tokenIndex: number = 2;
       const to = this.accounts.admin;
       const tx = this.PxlGenFactory.connect(this.signers.proxy).mint(tokenIndex, to, 1, "0x00");
-      const tokenId: BigNumber = (await this.PxlGen.CELL_TOKEN_TYPE()).add(tokenIndex);
+      const tokenId: BigNumber = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(tokenIndex);
 
-      await expect(tx).to.emit(this.PxlGen, "CellMinted").withArgs(to, tokenId, tokenIndex, defaultURI);
+      await expect(tx).to.emit(this.PxlGen, "PlotMinted").withArgs(to, tokenId, tokenIndex, defaultURI);
       await expect(tx)
         .to.emit(this.PxlGen, "TransferSingle")
         .withArgs(this.PxlGenFactory.address, ethers.constants.AddressZero, to, tokenId, BN_ONE);
@@ -140,7 +140,8 @@ describe("PxlGenFactory Unit tests", function () {
   describe("uri", async function () {
     it("should return the correct uri for an option", async function () {
       const tokenIndex: number = 1;
-      expect(await this.PxlGenFactory.uri(tokenIndex)).to.equal(baseURI + tokenIndex + ".json");
+      console.log(await this.PxlGenFactory.uri(tokenIndex));
+      expect(await this.PxlGenFactory.uri(tokenIndex)).to.equal(baseURI + defaultURI + "/" + tokenIndex + ".json");
     });
   });
 
@@ -159,7 +160,7 @@ describe("PxlGenFactory Unit tests", function () {
   describe("safeTransferFrom", async function () {
     it("should work for owner", async function () {
       const tokenIndex: number = 3;
-      const tokenId: BigNumber = (await this.PxlGen.CELL_TOKEN_TYPE()).add(tokenIndex);
+      const tokenId: BigNumber = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(tokenIndex);
       const to = this.accounts.alice;
       await this.PxlGenFactory.safeTransferFrom(ZERO_ADDR, to, tokenIndex, 1, "0x00");
       expect(await this.PxlGen.balanceOf(to, tokenId)).to.eq(BN_ONE);
@@ -167,7 +168,7 @@ describe("PxlGenFactory Unit tests", function () {
 
     it("should work for proxy", async function () {
       const tokenIndex: number = 4;
-      const tokenId: BigNumber = (await this.PxlGen.CELL_TOKEN_TYPE()).add(tokenIndex);
+      const tokenId: BigNumber = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(tokenIndex);
       const to = this.accounts.alice;
       await this.PxlGenFactory.connect(this.signers.proxy).safeTransferFrom(ZERO_ADDR, to, tokenIndex, 1, "0x00");
       expect(await this.PxlGen.balanceOf(to, tokenId)).to.eq(BN_ONE);

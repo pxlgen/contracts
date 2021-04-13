@@ -49,8 +49,8 @@ describe("PxlGen Unit tests", function () {
   });
 
   describe("constants", function () {
-    it("has correct MAX_CELL_SUPPLY", async function () {
-      expect(await this.PxlGen.MAX_CELL_SUPPLY()).to.eq(400);
+    it("has correct MAX_PLOT_SUPPLY", async function () {
+      expect(await this.PxlGen.MAX_PLOT_SUPPLY()).to.eq(400);
     });
 
     it("Have correct MAX_PRINT_SUPPLY", async function () {
@@ -61,16 +61,16 @@ describe("PxlGen Unit tests", function () {
   describe("URI", function () {
     it("Should return default uri for token with no tokenURI", async function () {
       const tokenIndex = 100;
-      const tokenId = (await this.PxlGen.CELL_TOKEN_TYPE()).add(tokenIndex);
+      const tokenId = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(tokenIndex);
       expect(await this.PxlGen.uri(tokenId)).to.eq(baseURI + defaultURI + "/" + tokenIndex + ".json");
     });
 
     it("Should return tokenURI", async function () {
       const tokenIndex = 100;
-      const tokenId = (await this.PxlGen.CELL_TOKEN_TYPE()).add(tokenIndex);
+      const tokenId = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(tokenIndex);
       const tokenURI = "QmYu4zGb5rZx8DWtZoFU3gi5QSRueCTYH8MppiJtBn6qpW";
       const to = this.accounts.admin;
-      await this.PxlGen.mintCell(to, tokenIndex);
+      await this.PxlGen.mintPlot(to, tokenIndex);
       await this.PxlGen.updateTokenURI(tokenId, tokenURI);
       expect(await this.PxlGen.uri(tokenId)).to.eq(baseURI + tokenURI);
     });
@@ -83,13 +83,13 @@ describe("PxlGen Unit tests", function () {
     const newURI = "NewURIString";
     before(async function () {
       this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-      tokenId = (await this.PxlGen.CELL_TOKEN_TYPE()).add(tokenIndex);
+      tokenId = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(tokenIndex);
       printTokenId = (await this.PxlGen.PRINT_TOKEN_TYPE()).add(tokenIndex);
       const to = this.accounts.admin;
-      await this.PxlGen.mintCell(to, tokenIndex);
+      await this.PxlGen.mintPlot(to, tokenIndex);
     });
-    it("only cell tokens can update uri", async function () {
-      await expect(this.PxlGen.updateTokenURI(printTokenId, newURI)).to.be.revertedWith("!CELL_TOKEN_TYPE");
+    it("only plot tokens can update uri", async function () {
+      await expect(this.PxlGen.updateTokenURI(printTokenId, newURI)).to.be.revertedWith("!PLOT_TOKEN_TYPE");
     });
     it("only allow owner to change tokenURI", async function () {
       await expect(this.PxlGen.connect(this.signers.alice).updateTokenURI(tokenId, newURI)).to.be.revertedWith(
@@ -106,13 +106,13 @@ describe("PxlGen Unit tests", function () {
     });
   });
 
-  describe("mintCell", async function () {
+  describe("mintPlot", async function () {
     before(async function () {
       this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
     });
 
     it("cannot mint to zero address", async function () {
-      await expect(this.PxlGen.mintCell(ethers.constants.AddressZero, 1)).to.be.revertedWith(
+      await expect(this.PxlGen.mintPlot(ethers.constants.AddressZero, 1)).to.be.revertedWith(
         "ERC1155: mint to the zero address",
       );
     });
@@ -120,16 +120,16 @@ describe("PxlGen Unit tests", function () {
     context("should be valid index", async function () {
       it("Revert when index less than 1", async function () {
         const toAddr = this.accounts.alice;
-        await expect(this.PxlGen.mintCell(toAddr, 0)).to.be.revertedWith("Invalid index");
+        await expect(this.PxlGen.mintPlot(toAddr, 0)).to.be.revertedWith("Invalid index");
       });
       it("revert when index greater than 400", async function () {
         const toAddr = this.accounts.alice;
-        await expect(this.PxlGen.mintCell(toAddr, 401)).to.be.revertedWith("Invalid index");
+        await expect(this.PxlGen.mintPlot(toAddr, 401)).to.be.revertedWith("Invalid index");
       });
       it("revert if index already minted", async function () {
         const toAddr = this.accounts.alice;
-        await this.PxlGen.mintCell(toAddr, 1);
-        await expect(this.PxlGen.mintCell(toAddr, 1)).to.be.revertedWith("Cell already minted");
+        await this.PxlGen.mintPlot(toAddr, 1);
+        await expect(this.PxlGen.mintPlot(toAddr, 1)).to.be.revertedWith("Plot already minted");
       });
     });
 
@@ -139,21 +139,21 @@ describe("PxlGen Unit tests", function () {
       });
       it("succeed when called by owner", async function () {
         const toAddr = this.accounts.alice;
-        const token1: BigNumber = (await this.PxlGen.CELL_TOKEN_TYPE()).add(1);
-        await expect(this.PxlGen.mintCell(toAddr, 1))
-          .to.emit(this.PxlGen, "CellMinted")
+        const token1: BigNumber = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(1);
+        await expect(this.PxlGen.mintPlot(toAddr, 1))
+          .to.emit(this.PxlGen, "PlotMinted")
           .withArgs(toAddr, token1, 1, defaultURI);
       });
 
       it("revert if caller is not owner", async function () {
         const toAddr = this.accounts.alice;
-        await expect(this.PxlGen.connect(this.signers.alice).mintCell(toAddr, 1)).to.be.revertedWith(
+        await expect(this.PxlGen.connect(this.signers.alice).mintPlot(toAddr, 1)).to.be.revertedWith(
           "Ownable: caller is not the owner",
         );
       });
     });
 
-    context("minting cell", async function () {
+    context("minting plot", async function () {
       let tokenIndex: number;
       let tokenId: BigNumber;
       let to: string;
@@ -161,12 +161,12 @@ describe("PxlGen Unit tests", function () {
       before(async function () {
         this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
         tokenIndex = 1;
-        tokenId = (await this.PxlGen.CELL_TOKEN_TYPE()).add(tokenIndex);
+        tokenId = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(tokenIndex);
         to = this.accounts.admin;
-        mintTx = await this.PxlGen.mintCell(to, tokenIndex);
+        mintTx = await this.PxlGen.mintPlot(to, tokenIndex);
       });
-      it("Should emit CellMinted event", async function () {
-        await expect(mintTx).to.emit(this.PxlGen, "CellMinted").withArgs(to, tokenId, 1, defaultURI);
+      it("Should emit PlotMinted event", async function () {
+        await expect(mintTx).to.emit(this.PxlGen, "PlotMinted").withArgs(to, tokenId, 1, defaultURI);
       });
       it("Should emit TransferSingle event", async function () {
         await expect(mintTx)
@@ -181,20 +181,20 @@ describe("PxlGen Unit tests", function () {
       });
     });
   });
-  describe("isCellToken", function () {
-    it("should return true for CELL_TOKEN_TYPE", async function () {
-      const tokenId = (await this.PxlGen.CELL_TOKEN_TYPE()).add(1);
-      expect(await this.PxlGen.isCellToken(tokenId)).to.eq(true);
+  describe("isPlotToken", function () {
+    it("should return true for PLOT_TOKEN_TYPE", async function () {
+      const tokenId = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(1);
+      expect(await this.PxlGen.isPlotToken(tokenId)).to.eq(true);
     });
     it("should return false for PRINT_TOKEN_TYPE", async function () {
       const tokenId = (await this.PxlGen.PRINT_TOKEN_TYPE()).add(1);
-      expect(await this.PxlGen.isCellToken(tokenId)).to.eq(false);
+      expect(await this.PxlGen.isPlotToken(tokenId)).to.eq(false);
     });
   });
   describe("getTokenIndex", function () {
     it("should return correct index", async function () {
       const index = 100;
-      const tokenId = (await this.PxlGen.CELL_TOKEN_TYPE()).add(index);
+      const tokenId = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(index);
       expect(await this.PxlGen.getTokenIndex(tokenId)).to.eq(index);
     });
   });
@@ -210,7 +210,7 @@ describe("PxlGen Unit tests", function () {
     });
     it("returns true for minted index", async function () {
       const toAddr = this.accounts.alice;
-      await this.PxlGen.mintCell(toAddr, 1);
+      await this.PxlGen.mintPlot(toAddr, 1);
       expect(await this.PxlGen.isIndexMinted(1)).to.eq(true);
     });
 
@@ -218,13 +218,13 @@ describe("PxlGen Unit tests", function () {
       expect(await this.PxlGen.isIndexMinted(100)).to.eq(false);
     });
   });
-  describe("getCellTokenID", function () {
+  describe("getPlotTokenID", function () {
     before(async function () {
       this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
     });
     it("returns true for minted index", async function () {
       const toAddr = this.accounts.alice;
-      await this.PxlGen.mintCell(toAddr, 1);
+      await this.PxlGen.mintPlot(toAddr, 1);
       expect(await this.PxlGen.isIndexMinted(1)).to.eq(true);
     });
 
@@ -255,9 +255,9 @@ describe("PxlGen Unit tests", function () {
     let tokenId_2: BigNumber;
     before(async function () {
       this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-      await this.PxlGen.mintCell(this.accounts.alice, 1);
-      tokenId_1 = (await this.PxlGen.CELL_TOKEN_TYPE()).add(1);
-      tokenId_2 = (await this.PxlGen.CELL_TOKEN_TYPE()).add(2);
+      await this.PxlGen.mintPlot(this.accounts.alice, 1);
+      tokenId_1 = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(1);
+      tokenId_2 = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(2);
     });
     it("reverts when tokenid doesnt exist", async function () {
       await expect(this.PxlGen.ownerOf(1)).to.be.revertedWith("ERC721: owner query for nonexistent token");
@@ -277,7 +277,7 @@ describe("PxlGen Unit tests", function () {
         expect(await this.PxlGen.ownerOf(tokenId_1)).to.eq(this.accounts.bob);
       });
       it("when safeBatchTransferFrom", async function () {
-        await this.PxlGen.mintCell(this.accounts.bob, 2);
+        await this.PxlGen.mintPlot(this.accounts.bob, 2);
         await this.PxlGen.connect(this.signers.bob).safeBatchTransferFrom(
           this.accounts.bob,
           this.accounts.alice,

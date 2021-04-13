@@ -11,9 +11,9 @@ contract PxlGen is ERC1155, Ownable {
 
     uint256 public constant TYPE_MASK = uint256(type(uint128).max) << 128;
     uint128 public constant INDEX_MASK = type(uint128).max;
-    uint256 public constant CELL_TOKEN_TYPE = 1 << 128;
+    uint256 public constant PLOT_TOKEN_TYPE = 1 << 128;
     uint256 public constant PRINT_TOKEN_TYPE = 2 << 128;
-    uint256 public constant MAX_CELL_SUPPLY = 400;
+    uint256 public constant MAX_PLOT_SUPPLY = 400;
     uint256 public constant MAX_PRINT_SUPPLY = 800;
 
     uint256 public constant startingPrice = 0.05 ether;
@@ -26,7 +26,7 @@ contract PxlGen is ERC1155, Ownable {
 
     mapping(uint256 => address) private _owners;
 
-    event CellMinted(address indexed to, uint256 id, uint256 indexed index, string uri);
+    event PlotMinted(address indexed to, uint256 id, uint256 indexed index, string uri);
     event PrintMinted(address indexed to, uint256 id, uint256 indexed index, string uri, string price);
 
     constructor(string memory _baseURI, string memory _defaultURI) ERC1155("") Ownable() {
@@ -34,15 +34,15 @@ contract PxlGen is ERC1155, Ownable {
         defaultURI = _defaultURI;
     }
 
-    function mintCell(address to, uint256 index) external onlyOwner() {
-        require(!isIndexMinted[index], "Cell already minted");
-        require(index >= 1 && index <= MAX_CELL_SUPPLY, "Invalid index");
+    function mintPlot(address to, uint256 index) external onlyOwner() {
+        require(!isIndexMinted[index], "Plot already minted");
+        require(index >= 1 && index <= MAX_PLOT_SUPPLY, "Invalid index");
 
-        uint256 id = getCellTokenID(index);
+        uint256 id = getPlotTokenID(index);
         _mint(to, id, 1, "");
         isIndexMinted[index] = true;
 
-        emit CellMinted(to, id, index, defaultURI);
+        emit PlotMinted(to, id, index, defaultURI);
     }
 
     function mintPrint(string calldata tokenURI) external payable {
@@ -57,7 +57,7 @@ contract PxlGen is ERC1155, Ownable {
 
         tokenURIs[id] = tokenURI;
 
-        emit CellMinted(to, id, index, defaultURI);
+        emit PlotMinted(to, id, index, defaultURI);
     }
 
     function setBaseURI(string memory _baseURI) external onlyOwner() {
@@ -69,7 +69,7 @@ contract PxlGen is ERC1155, Ownable {
     // - should return tokenURI if it is set
     // - should return correct uri for given token type
     function uri(uint256 tokenId) public view override returns (string memory) {
-        if (isCellToken(tokenId)) {
+        if (isPlotToken(tokenId)) {
             string memory ipfsHash = tokenURIs[tokenId];
             // if no tokenURI is set then return defaultURI.
             if (bytes(ipfsHash).length < 1) {
@@ -82,22 +82,22 @@ contract PxlGen is ERC1155, Ownable {
 
     function updateTokenURI(uint256 tokenId, string memory tokenURI) public {
         require(bytes(tokenURI).length > 0, "!valid tokenURI");
-        require(isCellToken(tokenId), "!CELL_TOKEN_TYPE");
+        require(isPlotToken(tokenId), "!PLOT_TOKEN_TYPE");
         require(balanceOf(_msgSender(), tokenId) == 1, "!owner");
         tokenURIs[tokenId] = tokenURI;
         emit URI(tokenURI, tokenId);
     }
 
-    function isCellToken(uint256 tokenId) public pure returns (bool) {
-        return tokenId & TYPE_MASK == CELL_TOKEN_TYPE;
+    function isPlotToken(uint256 tokenId) public pure returns (bool) {
+        return tokenId & TYPE_MASK == PLOT_TOKEN_TYPE;
     }
 
     function getTokenIndex(uint256 tokenId) public pure returns (uint256) {
         return tokenId & INDEX_MASK;
     }
 
-    function getCellTokenID(uint256 index) public pure returns (uint256) {
-        return CELL_TOKEN_TYPE + index;
+    function getPlotTokenID(uint256 index) public pure returns (uint256) {
+        return PLOT_TOKEN_TYPE + index;
     }
 
     function getPrintTokenID(uint256 index) public pure returns (uint256) {
@@ -109,7 +109,7 @@ contract PxlGen is ERC1155, Ownable {
     }
 
     function getCoordinates(uint256 index) public pure returns (uint256, uint256) {
-        require(index >= 1 && index <= MAX_CELL_SUPPLY, "Invalid index");
+        require(index >= 1 && index <= MAX_PLOT_SUPPLY, "Invalid index");
         uint256 floor = (uint256(index) / 20) * 20;
         uint256 ceil = ((index + 20 - 1) / 20) * 20;
         uint256 x = index - floor;

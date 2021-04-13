@@ -12,7 +12,7 @@ contract ProxyRegistry {
 }
 
 interface IPxlGen {
-    function mintCell(address to, uint256 index) external;
+    function mintPlot(address to, uint256 index) external;
 
     function isIndexMinted(uint256 index) external view returns (bool);
 }
@@ -69,7 +69,11 @@ contract PxlGenFactory is IFactory, Ownable, ReentrancyGuard {
     }
 
     function uri(uint256 _index) external view override returns (string memory) {
-        return string(abi.encodePacked(baseMetadataURI, toString(_index), ".json"));
+        return string(abi.encodePacked(baseMetadataURI, "/", toString(_index), ".json"));
+    }
+
+    function tokenURI(uint256 _index) external view returns (string memory) {
+        return string(abi.encodePacked(baseMetadataURI, "/", toString(_index), ".json"));
     }
 
     function _mint(
@@ -80,7 +84,7 @@ contract PxlGenFactory is IFactory, Ownable, ReentrancyGuard {
     ) internal {
         require(_isOwnerOrProxy(msg.sender), "!authorised");
         require(_canMint(msg.sender, _index, _amount), "Already minted");
-        pxlGen.mintCell(_to, _index);
+        pxlGen.mintPlot(_to, _index);
     }
 
     function balanceOf(address, uint256 _index) public view override returns (uint256) {

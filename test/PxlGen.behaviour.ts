@@ -25,9 +25,9 @@ export function shouldBehaveLikeERC1155(): void {
     let tokenId_3: BigNumber;
     before(async function () {
       this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-      tokenId_1 = (await this.PxlGen.CELL_TOKEN_TYPE()).add(1);
-      tokenId_2 = (await this.PxlGen.CELL_TOKEN_TYPE()).add(2);
-      tokenId_3 = (await this.PxlGen.CELL_TOKEN_TYPE()).add(3);
+      tokenId_1 = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(1);
+      tokenId_2 = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(2);
+      tokenId_3 = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(3);
     });
     describe("balanceOf", function () {
       it("reverts when queried about the zero address", async function () {
@@ -46,8 +46,8 @@ export function shouldBehaveLikeERC1155(): void {
 
       context("when accounts own some tokens", function () {
         before(async function () {
-          await this.PxlGen.mintCell(this.accounts.admin, 1);
-          await this.PxlGen.mintCell(this.accounts.alice, 2);
+          await this.PxlGen.mintPlot(this.accounts.admin, 1);
+          await this.PxlGen.mintPlot(this.accounts.alice, 2);
         });
 
         it("returns the amount of tokens owned by the given addresses", async function () {
@@ -98,8 +98,8 @@ export function shouldBehaveLikeERC1155(): void {
 
       context("when accounts own some tokens", function () {
         before(async function () {
-          await this.PxlGen.mintCell(this.accounts.admin, 1);
-          await this.PxlGen.mintCell(this.accounts.alice, 2);
+          await this.PxlGen.mintPlot(this.accounts.admin, 1);
+          await this.PxlGen.mintPlot(this.accounts.alice, 2);
         });
 
         it("returns amounts owned by each account in order passed", async function () {
@@ -159,8 +159,8 @@ export function shouldBehaveLikeERC1155(): void {
     describe("safeTransferFrom", function () {
       beforeEach(async function () {
         this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-        await this.PxlGen.mintCell(this.accounts.admin, 1);
-        await this.PxlGen.mintCell(this.accounts.admin, 2);
+        await this.PxlGen.mintPlot(this.accounts.admin, 1);
+        await this.PxlGen.mintPlot(this.accounts.admin, 2);
       });
       it("reverts when transferring more than balance", async function () {
         await expect(
@@ -271,7 +271,7 @@ export function shouldBehaveLikeERC1155(): void {
           let tx: ContractTransaction;
           beforeEach(async function () {
             this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-            await this.PxlGen.mintCell(this.accounts.admin, 1);
+            await this.PxlGen.mintPlot(this.accounts.admin, 1);
             tx = await this.PxlGen.safeTransferFrom(
               this.accounts.admin,
               this.ERC1155ReceiverMock.address,
@@ -307,7 +307,7 @@ export function shouldBehaveLikeERC1155(): void {
           let tx: ContractTransaction;
           beforeEach(async function () {
             this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-            await this.PxlGen.mintCell(this.accounts.admin, 1);
+            await this.PxlGen.mintPlot(this.accounts.admin, 1);
             tx = await this.PxlGen.safeTransferFrom(
               this.accounts.admin,
               this.ERC1155ReceiverMock.address,
@@ -348,7 +348,7 @@ export function shouldBehaveLikeERC1155(): void {
             false,
           ])) as ERC1155ReceiverMock;
           this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-          await this.PxlGen.mintCell(this.accounts.admin, 1);
+          await this.PxlGen.mintPlot(this.accounts.admin, 1);
         });
 
         it("reverts", async function () {
@@ -378,7 +378,7 @@ export function shouldBehaveLikeERC1155(): void {
       context("to a contract that does not implement the required function", function () {
         before(async function () {
           this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-          await this.PxlGen.mintCell(this.accounts.admin, 1);
+          await this.PxlGen.mintPlot(this.accounts.admin, 1);
         });
         it("reverts", async function () {
           const invalidReceiver = this.PxlGen;
@@ -391,8 +391,8 @@ export function shouldBehaveLikeERC1155(): void {
     describe("safeBatchTransferFrom", function () {
       beforeEach(async function () {
         this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-        await this.PxlGen.mintCell(this.accounts.admin, 1);
-        await this.PxlGen.mintCell(this.accounts.admin, 2);
+        await this.PxlGen.mintPlot(this.accounts.admin, 1);
+        await this.PxlGen.mintPlot(this.accounts.admin, 2);
       });
 
       it("reverts when transferring amount more than any of balances", async function () {
@@ -433,8 +433,8 @@ export function shouldBehaveLikeERC1155(): void {
         let tx: ContractTransaction;
         beforeEach(async function () {
           this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-          await this.PxlGen.mintCell(this.accounts.admin, 1);
-          await this.PxlGen.mintCell(this.accounts.admin, 2);
+          await this.PxlGen.mintPlot(this.accounts.admin, 1);
+          await this.PxlGen.mintPlot(this.accounts.admin, 2);
           tx = await this.PxlGen.safeBatchTransferFrom(
             this.accounts.admin,
             this.accounts.alice,
@@ -557,8 +557,8 @@ export function shouldBehaveLikeERC1155(): void {
           let txReceive: ContractTransaction;
           beforeEach(async function () {
             this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-            await this.PxlGen.mintCell(this.accounts.admin, 1);
-            await this.PxlGen.mintCell(this.accounts.admin, 2);
+            await this.PxlGen.mintPlot(this.accounts.admin, 1);
+            await this.PxlGen.mintPlot(this.accounts.admin, 2);
             txReceive = await this.PxlGen.safeBatchTransferFrom(
               this.accounts.admin,
               this.ERC1155ReceiverMock.address,
@@ -612,8 +612,8 @@ export function shouldBehaveLikeERC1155(): void {
           let txReceive: ContractTransaction;
           beforeEach(async function () {
             this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-            await this.PxlGen.mintCell(this.accounts.admin, 1);
-            await this.PxlGen.mintCell(this.accounts.admin, 2);
+            await this.PxlGen.mintPlot(this.accounts.admin, 1);
+            await this.PxlGen.mintPlot(this.accounts.admin, 2);
             txReceive = await this.PxlGen.safeBatchTransferFrom(
               this.accounts.admin,
               this.ERC1155ReceiverMock.address,
@@ -674,8 +674,8 @@ export function shouldBehaveLikeERC1155(): void {
         ])) as ERC1155ReceiverMock;
         this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
 
-        await this.PxlGen.mintCell(this.accounts.admin, 1);
-        await this.PxlGen.mintCell(this.accounts.admin, 2);
+        await this.PxlGen.mintPlot(this.accounts.admin, 1);
+        await this.PxlGen.mintPlot(this.accounts.admin, 2);
       });
 
       it("reverts", async function () {
@@ -700,8 +700,8 @@ export function shouldBehaveLikeERC1155(): void {
           true,
         ])) as ERC1155ReceiverMock;
         this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-        await this.PxlGen.mintCell(this.accounts.admin, 1);
-        await this.PxlGen.mintCell(this.accounts.admin, 2);
+        await this.PxlGen.mintPlot(this.accounts.admin, 1);
+        await this.PxlGen.mintPlot(this.accounts.admin, 2);
       });
 
       it("reverts", async function () {
@@ -728,8 +728,8 @@ export function shouldBehaveLikeERC1155(): void {
           false,
         ])) as ERC1155ReceiverMock;
         this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-        await this.PxlGen.mintCell(this.accounts.admin, 1);
-        await this.PxlGen.mintCell(this.accounts.admin, 2);
+        await this.PxlGen.mintPlot(this.accounts.admin, 1);
+        await this.PxlGen.mintPlot(this.accounts.admin, 2);
         txReceive = await this.PxlGen.safeBatchTransferFrom(
           this.accounts.admin,
           this.ERC1155ReceiverMock.address,
@@ -781,8 +781,8 @@ export function shouldBehaveLikeERC1155(): void {
     context("to a contract that does not implement the required function", function () {
       before(async function () {
         this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
-        await this.PxlGen.mintCell(this.accounts.admin, 1);
-        await this.PxlGen.mintCell(this.accounts.admin, 2);
+        await this.PxlGen.mintPlot(this.accounts.admin, 1);
+        await this.PxlGen.mintPlot(this.accounts.admin, 2);
       });
       it("reverts", async function () {
         const invalidReceiver = this.PxlGen;
