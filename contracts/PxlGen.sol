@@ -2,13 +2,14 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "hardhat/console.sol";
 
-contract PxlGen is ERC1155, Ownable {
-    using Counters for Counters.Counter;
-    Counters.Counter private _printIndexTracker;
+contract PxlGen is ERC1155, AccessControl {
+    bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
+    bytes32 public constant PRINTER_ROLE = keccak256("PRINTER_ROLE");
 
+    // ============ Token Constants ============ //
     uint256 public constant TYPE_MASK = uint256(type(uint128).max) << 128;
     uint128 public constant INDEX_MASK = type(uint128).max;
     uint256 public constant PLOT_TOKEN_TYPE = 1 << 128;
@@ -16,25 +17,29 @@ contract PxlGen is ERC1155, Ownable {
     uint256 public constant MAX_PLOT_SUPPLY = 400;
     uint256 public constant MAX_PRINT_SUPPLY = 800;
 
-    uint256 public constant startingPrice = 0.05 ether;
-
+    // ============ Metadata ============ //
     string public baseURI;
     string public defaultURI; // ipfs directory with generated metadata
     mapping(uint256 => string) public tokenURIs;
 
+    // ============ Plot Token Vars ============ //
     mapping(uint256 => bool) public isIndexMinted;
-
     mapping(uint256 => address) private _owners;
 
     event PlotMinted(address indexed to, uint256 id, uint256 indexed index, string uri);
-    event PrintMinted(address indexed to, uint256 id, uint256 indexed index, string uri, string price);
+    event PrintMinted(address indexed to, uint256 id, uint256 indexed index, string uri, uint256 price);
+    event PrintBurned(address indexed from, uint256 id, uint256 indexed index, uint256 price);
 
-    constructor(string memory _baseURI, string memory _defaultURI) ERC1155("") Ownable() {
+    constructor(string memory _baseURI, string memory _defaultURI) ERC1155("") {
         baseURI = _baseURI;
         defaultURI = _defaultURI;
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function mintPlot(address to, uint256 index) external onlyOwner() {
+    // ============ Minting/Burning Functions ============ //
+
+    function mintPlot(address to, uint256 index) external {
+        require(hasRole(FACTORY_ROLE, msg.sender), "!FACTORY_ROLE");
         require(!isIndexMinted[index], "Plot already minted");
         require(index >= 1 && index <= MAX_PLOT_SUPPLY, "Invalid index");
 
@@ -45,29 +50,38 @@ contract PxlGen is ERC1155, Ownable {
         emit PlotMinted(to, id, index, defaultURI);
     }
 
-    function mintPrint(string calldata tokenURI) external payable {
-        address to = _msgSender();
-        require(_msgSender() != address(0), "no minting zero address");
-
-        _printIndexTracker.increment();
-        uint256 index = _printIndexTracker.current();
+    function mintPrint(
+        address to,
+        uint256 index,
+        string calldata tokenURI,
+        uint256 price
+    ) external payable {
+        require(hasRole(PRINTER_ROLE, msg.sender), "!PRINTER_ROLE");
         uint256 id = getPrintTokenID(index);
-
-        _mint(to, id, 1, "");
-
         tokenURIs[id] = tokenURI;
-
-        emit PlotMinted(to, id, index, defaultURI);
+        _mint(to, id, 1, "");
+        emit PrintMinted(to, id, index, tokenURI, price);
     }
 
-    function setBaseURI(string memory _baseURI) external onlyOwner() {
+    function burnPrint(
+        address from,
+        uint256 tokenId,
+        uint256 price
+    ) external {
+        require(hasRole(PRINTER_ROLE, msg.sender), "!PRINTER_ROLE");
+        require(balanceOf(from, tokenId) == 1, "!owner");
+        require(isPrintToken(tokenId), "!PRINT_TOKEN_TYPE");
+        _burn(from, tokenId, 1);
+        emit PrintBurned(from, tokenId, getTokenIndex(tokenId), price);
+    }
+
+    // =========== Metadata Functions =========== //
+
+    function setBaseURI(string memory _baseURI) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "!DEFAULT_ADMIN_ROLE");
         baseURI = _baseURI;
     }
 
-    // Tests:
-    // - should return defaultURI + token index if no tokenURI is set
-    // - should return tokenURI if it is set
-    // - should return correct uri for given token type
     function uri(uint256 tokenId) public view override returns (string memory) {
         if (isPlotToken(tokenId)) {
             string memory ipfsHash = tokenURIs[tokenId];
@@ -75,9 +89,8 @@ contract PxlGen is ERC1155, Ownable {
             if (bytes(ipfsHash).length < 1) {
                 return string(abi.encodePacked(baseURI, defaultURI, "/", toString(getTokenIndex(tokenId)), ".json"));
             }
-            return string(abi.encodePacked(baseURI, tokenURIs[tokenId]));
         }
-        return "";
+        return string(abi.encodePacked(baseURI, tokenURIs[tokenId]));
     }
 
     function updateTokenURI(uint256 tokenId, string memory tokenURI) public {
@@ -92,6 +105,10 @@ contract PxlGen is ERC1155, Ownable {
         return tokenId & TYPE_MASK == PLOT_TOKEN_TYPE;
     }
 
+    function isPrintToken(uint256 tokenId) public pure returns (bool) {
+        return tokenId & TYPE_MASK == PRINT_TOKEN_TYPE;
+    }
+
     function getTokenIndex(uint256 tokenId) public pure returns (uint256) {
         return tokenId & INDEX_MASK;
     }
@@ -100,12 +117,14 @@ contract PxlGen is ERC1155, Ownable {
         return PLOT_TOKEN_TYPE + index;
     }
 
-    function getPrintTokenID(uint256 index) public pure returns (uint256) {
-        return PRINT_TOKEN_TYPE + index;
+    function setFactory(address factory) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "!DEFAULT_ADMIN_ROLE");
+        _setupRole(FACTORY_ROLE, factory);
     }
 
-    function printPrice(uint256 index) public pure returns (uint256) {
-        return ((index**2) * startingPrice) / 100;
+    function setPrinter(address printer) external {
+        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "!DEFAULT_ADMIN_ROLE");
+        _setupRole(PRINTER_ROLE, printer);
     }
 
     function getCoordinates(uint256 index) public pure returns (uint256, uint256) {
@@ -120,8 +139,12 @@ contract PxlGen is ERC1155, Ownable {
 
     function ownerOf(uint256 tokenId) public view returns (address) {
         address owner = _owners[tokenId];
-        require(owner != address(0), "ERC721: owner query for nonexistent token");
+        require(owner != address(0), "owner query for nonexistent token");
         return owner;
+    }
+
+    function getPrintTokenID(uint256 index) public pure returns (uint256) {
+        return PRINT_TOKEN_TYPE + index;
     }
 
     function toString(uint256 value) internal pure returns (string memory) {
@@ -159,5 +182,9 @@ contract PxlGen is ERC1155, Ownable {
             uint256 id = ids[i];
             _owners[id] = to;
         }
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, AccessControl) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }

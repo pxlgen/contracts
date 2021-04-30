@@ -1,5 +1,12 @@
 import { Accounts, Signers } from "./";
-import { PxlGen, MockProxyRegistry, TestForReentrancyAttack, PxlGenFactory, ERC1155ReceiverMock } from "../typechain";
+import {
+  PxlGen,
+  MockProxyRegistry,
+  TestForReentrancyAttack,
+  PxlGenFactory,
+  ERC1155ReceiverMock,
+  PrintingPress,
+} from "../typechain";
 
 declare module "mocha" {
   export interface Context {
@@ -10,5 +17,6 @@ declare module "mocha" {
     Proxy: MockProxyRegistry;
     Attacker: TestForReentrancyAttack;
     ERC1155ReceiverMock: ERC1155ReceiverMock;
+    PrintingPress: PrintingPress;
   }
 }

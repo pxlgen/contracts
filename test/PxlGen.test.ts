@@ -36,6 +36,7 @@ describe("PxlGen Unit tests", function () {
     this.accounts.bob = await signers[2].getAddress();
 
     this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
+    await this.PxlGen.setFactory(this.accounts.admin);
   });
 
   describe("constructor", function () {
@@ -83,6 +84,7 @@ describe("PxlGen Unit tests", function () {
     const newURI = "NewURIString";
     before(async function () {
       this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
+      await this.PxlGen.setFactory(this.accounts.admin);
       tokenId = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(tokenIndex);
       printTokenId = (await this.PxlGen.PRINT_TOKEN_TYPE()).add(tokenIndex);
       const to = this.accounts.admin;
@@ -109,6 +111,7 @@ describe("PxlGen Unit tests", function () {
   describe("mintPlot", async function () {
     before(async function () {
       this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
+      await this.PxlGen.setFactory(this.accounts.admin);
     });
 
     it("cannot mint to zero address", async function () {
@@ -133,11 +136,12 @@ describe("PxlGen Unit tests", function () {
       });
     });
 
-    context("only callable by owner", async function () {
+    context("only callable by factory", async function () {
       before(async function () {
         this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
+        await this.PxlGen.setFactory(this.accounts.admin);
       });
-      it("succeed when called by owner", async function () {
+      it("succeed when called by factory", async function () {
         const toAddr = this.accounts.alice;
         const token1: BigNumber = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(1);
         await expect(this.PxlGen.mintPlot(toAddr, 1))
@@ -145,11 +149,9 @@ describe("PxlGen Unit tests", function () {
           .withArgs(toAddr, token1, 1, defaultURI);
       });
 
-      it("revert if caller is not owner", async function () {
+      it("revert if caller is not factory", async function () {
         const toAddr = this.accounts.alice;
-        await expect(this.PxlGen.connect(this.signers.alice).mintPlot(toAddr, 1)).to.be.revertedWith(
-          "Ownable: caller is not the owner",
-        );
+        await expect(this.PxlGen.connect(this.signers.alice).mintPlot(toAddr, 1)).to.be.revertedWith("!FACTORY_ROLE");
       });
     });
 
@@ -160,6 +162,7 @@ describe("PxlGen Unit tests", function () {
       let mintTx: ContractTransaction;
       before(async function () {
         this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
+        await this.PxlGen.setFactory(this.accounts.admin);
         tokenIndex = 1;
         tokenId = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(tokenIndex);
         to = this.accounts.admin;
@@ -207,6 +210,7 @@ describe("PxlGen Unit tests", function () {
   describe("isIndexMinted", function () {
     before(async function () {
       this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
+      await this.PxlGen.setFactory(this.accounts.admin);
     });
     it("returns true for minted index", async function () {
       const toAddr = this.accounts.alice;
@@ -221,6 +225,7 @@ describe("PxlGen Unit tests", function () {
   describe("getPlotTokenID", function () {
     before(async function () {
       this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
+      await this.PxlGen.setFactory(this.accounts.admin);
     });
     it("returns true for minted index", async function () {
       const toAddr = this.accounts.alice;
@@ -255,12 +260,13 @@ describe("PxlGen Unit tests", function () {
     let tokenId_2: BigNumber;
     before(async function () {
       this.PxlGen = (await deployContract(this.signers.admin, PxlGenArtifact, [baseURI, defaultURI])) as PxlGen;
+      await this.PxlGen.setFactory(this.accounts.admin);
       await this.PxlGen.mintPlot(this.accounts.alice, 1);
       tokenId_1 = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(1);
       tokenId_2 = (await this.PxlGen.PLOT_TOKEN_TYPE()).add(2);
     });
     it("reverts when tokenid doesnt exist", async function () {
-      await expect(this.PxlGen.ownerOf(1)).to.be.revertedWith("ERC721: owner query for nonexistent token");
+      await expect(this.PxlGen.ownerOf(1)).to.be.revertedWith("owner query for nonexistent token");
     });
     context("owner gets set correctly", async function () {
       it("when minting", async function () {
@@ -290,5 +296,6 @@ describe("PxlGen Unit tests", function () {
       });
     });
   });
+
   shouldBehaveLikeERC1155();
 });

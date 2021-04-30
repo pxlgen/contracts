@@ -20,6 +20,7 @@ export interface Signers {
 export interface DeployedContracts {
   PxlGen: string;
   PxlGenFactory: string;
+  PrintingPress: string;
   Proxy: string;
   Multicall: string;
 }

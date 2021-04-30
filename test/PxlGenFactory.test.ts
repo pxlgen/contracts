@@ -56,7 +56,7 @@ describe("PxlGenFactory Unit tests", function () {
       baseURI + defaultURI,
     ])) as PxlGenFactory;
 
-    await this.PxlGen.transferOwnership(this.PxlGenFactory.address);
+    await this.PxlGen.setFactory(this.PxlGenFactory.address);
     await this.Attacker.setFactoryAddress(this.PxlGenFactory.address);
   });
 
@@ -140,7 +140,6 @@ describe("PxlGenFactory Unit tests", function () {
   describe("uri", async function () {
     it("should return the correct uri for an option", async function () {
       const tokenIndex: number = 1;
-      console.log(await this.PxlGenFactory.uri(tokenIndex));
       expect(await this.PxlGenFactory.uri(tokenIndex)).to.equal(baseURI + defaultURI + "/" + tokenIndex + ".json");
     });
   });
