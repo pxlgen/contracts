@@ -9,6 +9,8 @@ contract PxlGen is ERC1155, AccessControl {
     bytes32 public constant FACTORY_ROLE = keccak256("FACTORY_ROLE");
     bytes32 public constant PRINTER_ROLE = keccak256("PRINTER_ROLE");
 
+    // Test
+
     // ============ Token Constants ============ //
     uint256 public constant TYPE_MASK = uint256(type(uint128).max) << 128;
     uint128 public constant INDEX_MASK = type(uint128).max;
